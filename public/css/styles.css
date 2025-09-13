@@ -4,3 +4,83 @@
 *:after {
   box-sizing: border-box;
 }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: white;
+  background-image: 
+    linear-gradient(45deg, #000 25%, transparent 25%),
+    linear-gradient(-45deg, #000 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #000 75%),
+    linear-gradient(-45deg, transparent 75%, #000 75%);
+  background-size: 120px 120px;   /* controls square size */
+  background-position: 0 0, 0 60px, 60px -60px, -60px 0;
+}
+
+/* Wrapper box (the whole page content) */
+#wrapper {
+  max-width: 1000px;              /* width of the box */
+  margin: 2rem auto;              /* centers horizontally with top/bottom margin */
+  background: #fff;               /* white background so it stands above checkerboard */
+  border-radius: 10px;            /* rounded corners */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3); /* subtle shadow */
+  overflow: hidden;               /* ensures header/footer edges stay inside rounded corners */
+  padding: 1rem;                  /* space between content and box edges */
+}
+
+/* Header container */
+#top-header {
+  display: flex;
+  justify-content: space-between; /* pushes left and right */
+  align-items: center;            /* centers vertically */
+  padding: 1rem;
+  position: relative;
+}
+
+/* Site name (CSE Motors) */
+#top-header .siteName a {
+  font-size: 2.5rem;    /* bigger size */
+  font-weight: bold;
+  color: #333;
+  text-decoration: none;
+}
+
+/* Tools (My Account) */
+#top-header #tools a {
+  font-size: 1.2rem;    /* a little smaller */
+  color: #666;
+  text-decoration: none;
+  position: relative;
+  top: -10px;           /* nudges it a bit higher */
+}
+
+#top-header #tools a:hover {
+  color: #000;
+}
+
+/* Navigation container */
+nav {
+  background: #333;       /* darker background */
+  margin: 0.5rem;         /* small padding from wrapper edges */
+  border-radius: 6px;     /* optional rounded corners */
+}
+
+/* Navigation list */
+nav ul {
+  list-style: none;
+  display: flex;
+  justify-content: center;  /* keeps links aligned */
+  align-items: center;       /* vertical centering */
+  margin: 0;
+  padding: 0;
+  height: 3rem;              /* fixed height for nav bar */
+}
+
+/* Navigation items */
+nav ul li {
+  flex: 1;                  /* makes each item take equal space */
+  text-align: center;       /* centers text inside each item */
+  color: #fff;
+}
+
