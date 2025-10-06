@@ -17,6 +17,8 @@ const accountRoute = require("./routes/accountRoute")
 const utilities = require("./utilities/")
 const session = require("express-session")
 const pool = require("./database/")
+const bodyParser = require("body-parser")
+
 
 /* ***********************
  * Middleware
@@ -45,6 +47,10 @@ app.use((req, res, next) => {
   res.locals.messages = require("express-messages")(req, res)
   next()
 })
+
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+
 
 /* ***********************
  * View engine and templates

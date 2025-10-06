@@ -1,15 +1,32 @@
+/********************************************
+ * Account Routes
+ ********************************************/
+
+// Needed Resources
 const express = require("express")
 const router = new express.Router()
 const utilities = require("../utilities")
 const accountController = require("../controllers/accountController")
+const regValidate = require("../utilities/account-validation")
 
-// Route to build the login view
+/* ****************************************
+ *  Login Route
+ * *************************************** */
 router.get("/login", utilities.handleErrors(accountController.buildLogin))
 
-// Route to build the registration view
+/* ****************************************
+ *  Registration View Route
+ * *************************************** */
 router.get("/register", utilities.handleErrors(accountController.buildRegister))
 
-// POST registration route
-router.post("/register", utilities.handleErrors(accountController.registerAccount))
+/* ****************************************
+ *  Registration POST Route with Validation
+ * *************************************** */
+router.post(
+  "/register",
+  regValidate.registrationRules(),
+  regValidate.checkRegData,
+  utilities.handleErrors(accountController.registerAccount)
+)
 
 module.exports = router
