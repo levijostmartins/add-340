@@ -15,7 +15,7 @@ async function buildByClassificationId(req, res, next) {
     title: className + " vehicles",
     nav,
     grid,
-  })
+  }) 
 }
 
 /* ***************************
