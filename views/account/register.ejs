@@ -27,6 +27,7 @@
     <!-- First Name -->
     <label for="account_firstname">First Name</label>
     <input type="text" id="account_firstname" name="account_firstname" 
+            required value="<%= locals.account_firstname %>"
            value="<%= typeof account_firstname !== 'undefined' ? account_firstname : '' %>" 
            placeholder="Enter your first name" required>
 

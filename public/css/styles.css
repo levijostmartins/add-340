@@ -326,3 +326,93 @@ nav ul li {
 .login-link a:hover, .register-link a:hover {
   text-decoration: underline;
 }
+
+/* Inventory Management Forms */
+.inventory-form,
+.classification-form {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+.inventory-form label,
+.classification-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.inventory-form input,
+.inventory-form select,
+.inventory-form textarea,
+.classification-form input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.inventory-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.inventory-form button,
+.classification-form button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #0077cc;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.inventory-form button:hover,
+.classification-form button:hover {
+  background-color: #005fa3;
+}
+
+/* Flash messages for inventory/classification */
+.flash-message {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #e6f4ff;
+  border-left: 4px solid #0077cc;
+  color: #004999;
+  border-radius: 4px;
+}
+
+.notice {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: #ffe6e6;
+  border-left: 4px solid #cc0000;
+  color: #990000;
+  border-radius: 4px;
+  list-style: disc inside;
+}
+
+/* Responsive adjustments */
+@media screen and (min-width: 768px) {
+  .inventory-form,
+  .classification-form {
+    max-width: 600px;
+    padding: 2.5rem;
+  }
+
+  .inventory-form button,
+  .classification-form button {
+    font-size: 1.1rem;
+    padding: 1rem;
+  }
+}

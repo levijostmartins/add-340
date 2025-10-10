@@ -9,48 +9,62 @@
 const express = require("express")
 const expressLayouts = require("express-ejs-layouts")
 const env = require("dotenv").config()
+const session = require("express-session")
+const flash = require("connect-flash")
+const messages = require("express-messages")
+const bodyParser = require("body-parser")
+const path = require("path")
+
 const app = express()
-const static = require("./routes/static") 
+
+// Database and session store
+const pool = require("./database/")
+const pgSession = require("connect-pg-simple")(session)
+
+// Controllers & routes
 const baseController = require("./controllers/baseController")
 const inventoryRoute = require("./routes/inventoryRoute")
 const accountRoute = require("./routes/accountRoute")
+const staticRoutes = require("./routes/static")
+const errorRoutes = require("./routes/errorRoutes")
 const utilities = require("./utilities/")
-const session = require("express-session")
-const pool = require("./database/")
-const bodyParser = require("body-parser")
-
 
 /* ***********************
  * Middleware
  *************************/
 
-// Parse incoming request bodies (needed for POST forms)
+// Parse incoming request bodies
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
-// Session middleware
-app.use(session({
-  store: new (require("connect-pg-simple")(session))({
-    createTableIfMissing: true,
-    pool,
-  }),
-  secret: process.env.SESSION_SECRET,
-  resave: true,
-  saveUninitialized: true,
-  name: "sessionId",
-}))
+// Body parser (legacy compatibility)
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
+
+// Static routes
+app.use(staticRoutes)
+
+// Session management
+app.use(
+  session({
+    store: new pgSession({
+      createTableIfMissing: true,
+      pool,
+    }),
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    name: "sessionId",
+    cookie: { secure: false }, // set true if HTTPS
+  })
+)
 
 // Flash messages middleware
-app.use(require("connect-flash")())
+app.use(flash())
 app.use((req, res, next) => {
-  // Make flash messages available to views
-  res.locals.messages = require("express-messages")(req, res)
+  res.locals.messages = messages(req, res)
   next()
 })
-
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
-
 
 /* ***********************
  * View engine and templates
@@ -62,37 +76,39 @@ app.set("layout", "./layouts/layout")
 /* ***********************
  * Routes
  *************************/
-app.use(static)
 
-// Index route
+// Home page
 app.get("/", utilities.handleErrors(baseController.buildHome))
 
-// Inventory routes
-app.use("/inv", utilities.handleErrors(inventoryRoute))
+// Inventory routes (classification + details)
+app.use("/inv", inventoryRoute)
 
-// Account routes (login & registration GET + POST)
+// Account routes (login, registration, etc.)
 app.use("/account", accountRoute)
 
 // Error routes
-app.use("/", require("./routes/errorRoutes"))
+app.use("/", errorRoutes)
 
-// File Not Found Route - must be last route in list
+// 404 handler (must come last)
 app.use(async (req, res, next) => {
   next({ status: 404, message: "Sorry, we appear to have lost that page." })
 })
 
 /* ***********************
- * Express Error Handler
- * Place after all other middleware
+ * Global Express Error Handler
  *************************/
 app.use(async (err, req, res, next) => {
-  let nav = await utilities.getNav()
-  console.error(`Error at: "${req.originalUrl}": ${err.message}`)
-  let message = (err.status === 404)
-    ? err.message
-    : "Oh no! There was a crash. Maybe try a different route?"
-  res.render("errors/error", {
-    title: err.status || "Server Error",
+  const nav = await utilities.getNav()
+  console.error(`Error at "${req.originalUrl}": ${err.message}`)
+
+  const status = err.status || 500
+  const message =
+    status === 404
+      ? err.message
+      : "Oh no! There was a crash. Maybe try a different route?"
+
+  res.status(status).render("errors/error", {
+    title: `${status} Error`,
     message,
     nav,
   })
@@ -100,14 +116,11 @@ app.use(async (err, req, res, next) => {
 
 /* ***********************
  * Local Server Information
- * Values from .env (environment) file
  *************************/
 const port = process.env.PORT || 5500
 const host = process.env.HOST || "localhost"
 
-/* ***********************
- * Log statement to confirm server operation
- *************************/
+
 app.listen(port, () => {
-  console.log(`app listening on ${host}:${port}`)
+  console.log(`App running at http://${host}:${port}`)
 })
