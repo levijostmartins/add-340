@@ -1,4 +1,7 @@
 const invModel = require("../models/inventory-model")
+const jwt = require("jsonwebtoken")
+require("dotenv").config()
+
 const Util = {}
 
 /* ************************
@@ -9,16 +12,7 @@ Util.getNav = async function () {
   let list = "<ul>"
   list += '<li><a href="/" title="Home page">Home</a></li>'
   data.rows.forEach((row) => {
-    list += "<li>"
-    list +=
-      '<a href="/inv/type/' +
-      row.classification_id +
-      '" title="See our inventory of ' +
-      row.classification_name +
-      ' vehicles">' +
-      row.classification_name +
-      "</a>"
-    list += "</li>"
+    list += `<li><a href="/inv/type/${row.classification_id}" title="See our inventory of ${row.classification_name} vehicles">${row.classification_name}</a></li>`
   })
   list += "</ul>"
   return list
@@ -28,52 +22,30 @@ Util.getNav = async function () {
  * Build the classification view HTML
  * ************************************ */
 Util.buildClassificationGrid = async function (data) {
-  let grid
-  if (data.length > 0) {
-    grid = '<ul id="inv-display">'
-    data.forEach((vehicle) => {
-      grid += "<li>"
-      grid +=
-        '<a href="../../inv/detail/' +
-        vehicle.inv_id +
-        '" title="View ' +
-        vehicle.inv_make +
-        " " +
-        vehicle.inv_model +
-        ' details"><img src="' +
-        vehicle.inv_thumbnail +
-        '" alt="Image of ' +
-        vehicle.inv_make +
-        " " +
-        vehicle.inv_model +
-        ' on CSE Motors" /></a>'
-      grid += '<div class="namePrice">'
-      grid += "<hr />"
-      grid += "<h2>"
-      grid +=
-        '<a href="../../inv/detail/' +
-        vehicle.inv_id +
-        '" title="View ' +
-        vehicle.inv_make +
-        " " +
-        vehicle.inv_model +
-        " details'>" +
-        vehicle.inv_make +
-        " " +
-        vehicle.inv_model +
-        "</a>"
-      grid += "</h2>"
-      grid +=
-        "<span>$" +
-        new Intl.NumberFormat("en-US").format(vehicle.inv_price) +
-        "</span>"
-      grid += "</div>"
-      grid += "</li>"
-    })
-    grid += "</ul>"
-  } else {
-    grid = '<p class="notice">Sorry, no matching vehicles could be found.</p>'
+  if (!data || data.length === 0) {
+    return '<p class="notice">Sorry, no matching vehicles could be found.</p>'
   }
+
+  let grid = '<ul id="inv-display">'
+  data.forEach((vehicle) => {
+    grid += `
+      <li>
+        <a href="../../inv/detail/${vehicle.inv_id}" title="View ${vehicle.inv_make} ${vehicle.inv_model} details">
+          <img src="${vehicle.inv_thumbnail}" alt="Image of ${vehicle.inv_make} ${vehicle.inv_model} on CSE Motors" />
+        </a>
+        <div class="namePrice">
+          <hr />
+          <h2>
+            <a href="../../inv/detail/${vehicle.inv_id}" title="View ${vehicle.inv_make} ${vehicle.inv_model} details">
+              ${vehicle.inv_make} ${vehicle.inv_model}
+            </a>
+          </h2>
+          <span>$${new Intl.NumberFormat("en-US").format(vehicle.inv_price)}</span>
+        </div>
+      </li>
+    `
+  })
+  grid += "</ul>"
   return grid
 }
 
@@ -118,18 +90,79 @@ Util.buildVehicleDetailHTML = function (vehicle) {
  * ************************************ */
 Util.buildClassificationList = async function (classification_id = null) {
   let data = await invModel.getClassifications()
-  let classificationList =
-    '<select name="classification_id" id="classificationList" required>'
-  classificationList += "<option value=''>Choose a Classification</option>"
+  let list = '<select name="classification_id" id="classificationList" required>'
+  list += "<option value=''>Choose a Classification</option>"
+
   data.rows.forEach((row) => {
-    classificationList += `<option value="${row.classification_id}"`
+    list += `<option value="${row.classification_id}"`
     if (classification_id != null && row.classification_id == classification_id) {
-      classificationList += " selected"
+      list += " selected"
     }
-    classificationList += `>${row.classification_name}</option>`
+    list += `>${row.classification_name}</option>`
   })
-  classificationList += "</select>"
-  return classificationList
+
+  list += "</select>"
+  return list
+}
+
+/* ****************************************
+ * Check JWT Token Middleware
+ * - Reads jwt cookie
+ * - Verifies and populates res.locals.accountData and req.session
+ **************************************** */
+Util.checkJWTToken = (req, res, next) => {
+  const token = req.cookies.jwt
+  if (token) {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, accountData) => {
+      if (!err && accountData) {
+        // Populate session if missing
+        if (req.session && !req.session.accountData) {
+          req.session.loggedin = true
+          req.session.accountData = accountData
+        }
+        res.locals.accountData = accountData
+        res.locals.loggedin = true
+      }
+      return next()
+    })
+  } else if (req.session && req.session.accountData) {
+    res.locals.accountData = req.session.accountData
+    res.locals.loggedin = true
+    next()
+  } else {
+    res.locals.loggedin = false
+    res.locals.accountData = null
+    next()
+  }
+}
+
+/* ****************************************
+ * Check Login Middleware
+ * - Protects routes for logged-in users only
+ **************************************** */
+Util.checkLogin = (req, res, next) => {
+  if (req.session && req.session.loggedin) {
+    res.locals.loggedin = true
+    res.locals.accountData = req.session.accountData
+    return next()
+  }
+  req.flash("notice", "Please log in.")
+  return res.redirect("/account/login")
+}
+
+/* ****************************************
+ * Check Admin / Employee Middleware
+ * - Protects add/edit/delete inventory routes
+ **************************************** */
+Util.checkAdmin = (req, res, next) => {
+  const acct = req.session && req.session.accountData
+  if (acct && (acct.account_type === "Employee" || acct.account_type === "Admin")) {
+    res.locals.loggedin = true
+    res.locals.accountData = acct
+    return next()
+  }
+  req.flash("notice", "You must be an Employee or Admin to access that page.")
+  return res.redirect("/account/login")
 }
 
 /* ****************************************

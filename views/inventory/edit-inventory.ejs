@@ -1,0 +1,71 @@
+<main>
+  <h1><%= title %></h1>
+
+  <% if (Array.isArray(messages) && messages.length > 0) { %>
+    <div class="flash-message">
+      <% messages.forEach(msg => { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (errors) { %>
+    <ul class="notice">
+      <% errors.array().forEach(error => { %>
+        <li><%= error.msg %></li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <p><strong>Confirm Deletion:</strong> This action <span style="color:red;">cannot be undone</span>. Please confirm that this is the correct inventory item to delete.</p>
+
+  <form id="deleteForm" action="/inv/delete" method="post" class="inventory-form" novalidate>
+    <!-- Hidden inventory ID -->
+    <input type="hidden" name="inv_id"
+      <% if (locals.inv_id) { %> value="<%= locals.inv_id %>" <% } %> >
+
+    <label for="inv_make">Make</label>
+    <input type="text" id="inv_make" name="inv_make" readonly
+           value="<%= typeof inv_make !== 'undefined' ? inv_make : '' %>">
+
+    <label for="inv_model">Model</label>
+    <input type="text" id="inv_model" name="inv_model" readonly
+           value="<%= typeof inv_model !== 'undefined' ? inv_model : '' %>">
+
+    <label for="inv_year">Year</label>
+    <input type="number" id="inv_year" name="inv_year" readonly
+           value="<%= typeof inv_year !== 'undefined' ? inv_year : '' %>">
+
+    <label for="inv_price">Price</label>
+    <input type="number" id="inv_price" name="inv_price" readonly
+           value="<%= typeof inv_price !== 'undefined' ? inv_price : '' %>">
+
+    <button type="submit" class="delete-btn">Delete Vehicle</button>
+  </form>
+
+  <style>
+    .delete-btn {
+      background-color: #d9534f;
+      color: white;
+      border: none;
+      padding: 0.75em 1.5em;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .delete-btn:hover {
+      background-color: #c9302c;
+    }
+
+    input[readonly] {
+      background-color: #f2f2f2;
+      border: 1px solid #ccc;
+      cursor: not-allowed;
+    }
+
+    p {
+      margin-bottom: 1.5em;
+    }
+  </style>
+</main>

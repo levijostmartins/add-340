@@ -1,0 +1,53 @@
+<main>
+  <h1><%= title %></h1>
+
+  <% if (Array.isArray(messages) && messages.length > 0) { %>
+    <div class="flash-message">
+      <% messages.forEach(msg => { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (errors) { %>
+    <ul class="notice">
+      <% errors.array().forEach(error => { %>
+        <li><%= error.msg %></li>
+      <% }) %>
+    </ul>
+  <% } %>
+
+  <section>
+    <h2>Account Update</h2>
+    <form action="/account/update" method="post" novalidate>
+      <input type="hidden" name="account_id" value="<%= account.account_id %>">
+
+      <label for="account_firstname">First Name</label>
+      <input id="account_firstname" name="account_firstname" required
+             value="<%= typeof account.account_firstname !== 'undefined' ? account.account_firstname : '' %>">
+
+      <label for="account_lastname">Last Name</label>
+      <input id="account_lastname" name="account_lastname" required
+             value="<%= typeof account.account_lastname !== 'undefined' ? account.account_lastname : '' %>">
+
+      <label for="account_email">Email</label>
+      <input id="account_email" name="account_email" type="email" required
+             value="<%= typeof account.account_email !== 'undefined' ? account.account_email : '' %>">
+
+      <button type="submit">Update Account</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Change Password</h2>
+    <p>Enter a new password (min 8 chars, include uppercase, number, special char).</p>
+    <form action="/account/password" method="post" novalidate>
+      <input type="hidden" name="account_id" value="<%= account.account_id %>">
+
+      <label for="newPassword">New Password</label>
+      <input id="newPassword" name="newPassword" type="password" required>
+
+      <button type="submit">Change Password</button>
+    </form>
+  </section>
+</main>

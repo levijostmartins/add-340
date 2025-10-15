@@ -1,6 +1,5 @@
 /* ******************************************
- * This server.js file is the primary file of the 
- * application. It is used to control the project.
+ * server.js - Main application entry
  *******************************************/
 
 /* ***********************
@@ -8,18 +7,16 @@
  *************************/
 const express = require("express")
 const expressLayouts = require("express-ejs-layouts")
-const env = require("dotenv").config()
+require("dotenv").config()
 const session = require("express-session")
+const pgSession = require("connect-pg-simple")(session)
 const flash = require("connect-flash")
 const messages = require("express-messages")
-const bodyParser = require("body-parser")
+const cookieParser = require("cookie-parser")
 const path = require("path")
 
-const app = express()
-
-// Database and session store
+// Database pool
 const pool = require("./database/")
-const pgSession = require("connect-pg-simple")(session)
 
 // Controllers & routes
 const baseController = require("./controllers/baseController")
@@ -30,36 +27,57 @@ const errorRoutes = require("./routes/errorRoutes")
 const utilities = require("./utilities/")
 
 /* ***********************
+ * App Initialization
+ *************************/
+const app = express()
+
+/* ***********************
  * Middleware
  *************************/
-
-// Parse incoming request bodies
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
+app.use(cookieParser())
 
-// Body parser (legacy compatibility)
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
-
-// Static routes
-app.use(staticRoutes)
-
-// Session management
+/* ***********************
+ * Session Management
+ *************************/
 app.use(
   session({
     store: new pgSession({
-      createTableIfMissing: true,
       pool,
+      createTableIfMissing: true,
+      pruneSessionInterval: 0,
     }),
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "defaultsecret",
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     name: "sessionId",
-    cookie: { secure: false }, // set true if HTTPS
+    cookie: {
+      maxAge: 2 * 60 * 60 * 1000, // 2 hours
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    },
   })
 )
 
-// Flash messages middleware
+/* ***********************
+ * JWT Middleware
+ * Apply after sessions are initialized
+ *************************/
+app.use(utilities.checkJWTToken)
+
+/* ***********************
+ * Make session info available to EJS views
+ *************************/
+app.use((req, res, next) => {
+  res.locals.loggedin = req.session && req.session.loggedin ? true : false
+  res.locals.accountData = req.session && req.session.accountData ? req.session.accountData : null
+  next()
+})
+
+/* ***********************
+ * Flash messages middleware
+ *************************/
 app.use(flash())
 app.use((req, res, next) => {
   res.locals.messages = messages(req, res)
@@ -67,7 +85,13 @@ app.use((req, res, next) => {
 })
 
 /* ***********************
- * View engine and templates
+ * Static files
+ *************************/
+app.use(express.static(path.join(__dirname, "public")))
+app.use(staticRoutes)
+
+/* ***********************
+ * View engine
  *************************/
 app.set("view engine", "ejs")
 app.use(expressLayouts)
@@ -76,50 +100,48 @@ app.set("layout", "./layouts/layout")
 /* ***********************
  * Routes
  *************************/
-
-// Home page
 app.get("/", utilities.handleErrors(baseController.buildHome))
-
-// Inventory routes (classification + details)
 app.use("/inv", inventoryRoute)
-
-// Account routes (login, registration, etc.)
 app.use("/account", accountRoute)
-
-// Error routes
 app.use("/", errorRoutes)
 
-// 404 handler (must come last)
+/* ***********************
+ * 404 handler
+ *************************/
 app.use(async (req, res, next) => {
   next({ status: 404, message: "Sorry, we appear to have lost that page." })
 })
 
 /* ***********************
- * Global Express Error Handler
+ * Global Error Handler
  *************************/
 app.use(async (err, req, res, next) => {
-  const nav = await utilities.getNav()
-  console.error(`Error at "${req.originalUrl}": ${err.message}`)
+  try {
+    const nav = await utilities.getNav()
+    console.error(`Error at "${req.originalUrl}": ${err.message}`)
 
-  const status = err.status || 500
-  const message =
-    status === 404
-      ? err.message
-      : "Oh no! There was a crash. Maybe try a different route?"
+    const status = err.status || 500
+    const message =
+      status === 404
+        ? err.message
+        : "Oh no! There was a crash. Maybe try a different route?"
 
-  res.status(status).render("errors/error", {
-    title: `${status} Error`,
-    message,
-    nav,
-  })
+    res.status(status).render("errors/error", {
+      title: `${status} Error`,
+      message,
+      nav,
+    })
+  } catch (error) {
+    console.error("Error rendering error page:", error)
+    res.status(500).send("Server error")
+  }
 })
 
 /* ***********************
- * Local Server Information
+ * Server Start
  *************************/
 const port = process.env.PORT || 5500
 const host = process.env.HOST || "localhost"
-
 
 app.listen(port, () => {
   console.log(`App running at http://${host}:${port}`)

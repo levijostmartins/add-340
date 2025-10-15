@@ -1,50 +1,45 @@
 /* *********************************************
- * Account Registration Data Validation
- * *********************************************/
+ * Account Registration & Login Data Validation
+ *********************************************/
 
 // Require dependencies
-const utilities = require(".") // your utilities index.js
+const utilities = require(".") 
 const { body, validationResult } = require("express-validator")
 const accountModel = require("../models/account-model")
+const jwt = require("jsonwebtoken")
 
 // Create the validate object
 const validate = {}
 
 /* **********************************
  * Registration Data Validation Rules
- * ********************************* */
+ ********************************* */
 validate.registrationRules = () => {
   return [
-    // First name: required, string, minimum length 1
     body("account_firstname")
       .trim()
       .escape()
       .notEmpty()
-      .isLength({ min: 1 })
       .withMessage("Please provide a first name."),
 
-    // Last name: required, string, minimum length 2
     body("account_lastname")
       .trim()
       .escape()
       .notEmpty()
-      .isLength({ min: 2 })
       .withMessage("Please provide a last name."),
 
-    // valid email is required and cannot already exist in the database
     body("account_email")
       .trim()
       .isEmail()
-      .normalizeEmail() // refer to validator.js docs
+      .normalizeEmail()
       .withMessage("A valid email is required.")
       .custom(async (account_email) => {
         const emailExists = await accountModel.checkExistingEmail(account_email)
         if (emailExists) {
-          throw new Error("Email exists. Please log in or use different email")
+          throw new Error("Email exists. Please log in or use a different email.")
         }
       }),
 
-    // Password: required, strong password
     body("account_password")
       .trim()
       .notEmpty()
@@ -62,25 +57,89 @@ validate.registrationRules = () => {
 }
 
 /* ******************************
- * Check data and return errors or continue to registration
- * ***************************** */
+ * Check registration data
+ ***************************** */
 validate.checkRegData = async (req, res, next) => {
   const { account_firstname, account_lastname, account_email } = req.body
-  let errors = []
-  errors = validationResult(req)
+  const errors = validationResult(req)
   if (!errors.isEmpty()) {
-    let nav = await utilities.getNav()
-    res.render("account/register", {
-      errors,
+    const nav = await utilities.getNav()
+    return res.render("account/register", {
       title: "Registration",
       nav,
       account_firstname,
       account_lastname,
       account_email,
+      errors: errors.array(),
+      messages: req.flash("notice"),
     })
-    return
   }
   next()
+}
+
+/* **********************************
+ * Login Data Validation Rules
+ ********************************* */
+validate.loginRules = () => {
+  return [
+    body("account_email")
+      .trim()
+      .isEmail()
+      .normalizeEmail()
+      .withMessage("Please provide a valid email address."),
+    body("account_password")
+      .trim()
+      .notEmpty()
+      .withMessage("Password is required."),
+  ]
+}
+
+/* ******************************
+ * Check login data
+ ***************************** */
+validate.checkLoginData = async (req, res, next) => {
+  const { account_email } = req.body
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    const nav = await utilities.getNav()
+    return res.render("account/login", {
+      title: "Login",
+      nav,
+      account_email,
+      errors: errors.array(),
+      messages: req.flash("notice"),
+    })
+  }
+  next()
+}
+
+/* ****************************************
+ * Middleware to check JWT token
+ **************************************** */
+validate.checkJWTToken = (req, res, next) => {
+  const token = req.cookies.jwt
+  if (token) {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, accountData) => {
+      if (err) {
+        req.flash("notice", "Please log in")
+        res.clearCookie("jwt")
+        return res.redirect("/account/login")
+      }
+
+      // Update session and locals
+      if (req.session) {
+        req.session.loggedin = true
+        req.session.accountData = accountData
+      }
+      res.locals.loggedin = true
+      res.locals.accountData = accountData
+      next()
+    })
+  } else {
+    res.locals.loggedin = req.session && req.session.loggedin ? true : false
+    res.locals.accountData = req.session && req.session.accountData ? req.session.accountData : null
+    next()
+  }
 }
 
 module.exports = validate
