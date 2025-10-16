@@ -9,32 +9,35 @@ const Util = {}
  ************************** */
 Util.getNav = async function () {
   try {
-    const data = await invModel.getClassifications()
+    const classifications = await invModel.getClassifications(); // already an array
 
-    let list = '<ul class="nav-list">'
-    list += '<li><a href="/" title="Home page">Home</a></li>'
+    let list = '<ul class="nav-list">';
+    list += '<li><a href="/" title="Home page">Home</a></li>';
 
     // Add classification links dynamically
-    data.rows.forEach((row) => {
-      list += `<li>
-        <a href="/inv/type/${row.classification_id}" 
-           title="See our inventory of ${row.classification_name} vehicles">
-          ${row.classification_name}
-        </a>
-      </li>`
-    })
+    if (Array.isArray(classifications) && classifications.length > 0) {
+      classifications.forEach((row) => {
+        list += `<li>
+          <a href="/inv/type/${row.classification_id}" 
+             title="See our inventory of ${row.classification_name} vehicles">
+            ${row.classification_name}
+          </a>
+        </li>`;
+      });
+    }
 
-    // Add new links for search and reports
-    list += `<li><a href="/search" title="Search inventory">Search</a></li>`
-    list += `<li><a href="/admin/reports" title="View Admin Reports">Reports</a></li>`
+    // Add additional links
+    list += `<li><a href="/search" title="Search inventory">Search</a></li>`;
+    list += `<li><a href="/admin/reports" title="View Admin Reports">Reports</a></li>`;
 
-    list += "</ul>"
-    return list
+    list += '</ul>';
+    return list;
   } catch (error) {
-    console.error("getNav error:", error)
-    return '<ul><li><a href="/">Home</a></li></ul>'
+    console.error("getNav error:", error);
+    return '<ul><li><a href="/">Home</a></li></ul>';
   }
-}
+};
+
 
 
 /* **************************************
