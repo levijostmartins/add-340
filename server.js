@@ -24,6 +24,8 @@ const inventoryRoute = require("./routes/inventoryRoute")
 const accountRoute = require("./routes/accountRoute")
 const staticRoutes = require("./routes/static")
 const errorRoutes = require("./routes/errorRoutes")
+const searchRoute = require("./routes/searchRoute")
+const reportsRoute = require("./routes/reportsRoute")
 const utilities = require("./utilities/")
 
 /* ***********************
@@ -41,24 +43,34 @@ app.use(cookieParser())
 /* ***********************
  * Session Management
  *************************/
-app.use(
-  session({
-    store: new pgSession({
-      pool,
-      createTableIfMissing: true,
-      pruneSessionInterval: 0,
-    }),
-    secret: process.env.SESSION_SECRET || "defaultsecret",
-    resave: false,
-    saveUninitialized: false,
-    name: "sessionId",
-    cookie: {
-      maxAge: 2 * 60 * 60 * 1000, // 2 hours
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    },
-  })
-)
+
+// Create session middleware
+const sessionMiddleware = session({
+  store: new pgSession({
+    pool,
+    createTableIfMissing: true,
+    pruneSessionInterval: 0,
+  }),
+  secret: process.env.SESSION_SECRET || "defaultsecret",
+  resave: false,
+  saveUninitialized: false,
+  name: "sessionId",
+  cookie: {
+    maxAge: 2 * 60 * 60 * 1000, // 2 hours
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  },
+})
+
+// Apply session middleware conditionally
+app.use((req, res, next) => {
+  // Skip session for /admin/reports
+  if (req.path.startsWith("/admin/reports")) {
+    return next() // skip session middleware
+  }
+  // Apply session for all other routes
+  sessionMiddleware(req, res, next)
+})
 
 /* ***********************
  * JWT Middleware
@@ -103,6 +115,11 @@ app.set("layout", "./layouts/layout")
 app.get("/", utilities.handleErrors(baseController.buildHome))
 app.use("/inv", inventoryRoute)
 app.use("/account", accountRoute)
+app.use("/search", searchRoute)
+
+// Reports route: fully public, no session
+app.use("/admin/reports", reportsRoute)
+
 app.use("/", errorRoutes)
 
 /* ***********************

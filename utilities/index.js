@@ -8,15 +8,34 @@ const Util = {}
  * Constructs the nav HTML unordered list
  ************************** */
 Util.getNav = async function () {
-  let data = await invModel.getClassifications()
-  let list = "<ul>"
-  list += '<li><a href="/" title="Home page">Home</a></li>'
-  data.rows.forEach((row) => {
-    list += `<li><a href="/inv/type/${row.classification_id}" title="See our inventory of ${row.classification_name} vehicles">${row.classification_name}</a></li>`
-  })
-  list += "</ul>"
-  return list
+  try {
+    const data = await invModel.getClassifications()
+
+    let list = '<ul class="nav-list">'
+    list += '<li><a href="/" title="Home page">Home</a></li>'
+
+    // Add classification links dynamically
+    data.rows.forEach((row) => {
+      list += `<li>
+        <a href="/inv/type/${row.classification_id}" 
+           title="See our inventory of ${row.classification_name} vehicles">
+          ${row.classification_name}
+        </a>
+      </li>`
+    })
+
+    // Add new links for search and reports
+    list += `<li><a href="/search" title="Search inventory">Search</a></li>`
+    list += `<li><a href="/admin/reports" title="View Admin Reports">Reports</a></li>`
+
+    list += "</ul>"
+    return list
+  } catch (error) {
+    console.error("getNav error:", error)
+    return '<ul><li><a href="/">Home</a></li></ul>'
+  }
 }
+
 
 /* **************************************
  * Build the classification view HTML

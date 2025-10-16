@@ -1,0 +1,36 @@
+
+<h1><%= title %></h1>
+
+<% if (data) { %>
+  <div class="report-summary">
+    <div class="summary-box">
+      <h3>Total Accounts</h3>
+      <p><%= data.totalAccounts %></p>
+    </div>
+    <div class="summary-box">
+      <h3>Total Vehicles</h3>
+      <p><%= data.totalVehicles %></p>
+    </div>
+    <div class="summary-box">
+      <h3>Average Vehicle Price</h3>
+      <p>$<%= data.avgPrice %></p>
+    </div>
+  </div>
+
+  <h2>Vehicles by Classification</h2>
+  <table class="report-table">
+    <tr>
+      <th>Classification</th>
+      <th>Count</th>
+    </tr>
+    <% data.classifications.forEach(c => { %>
+      <tr>
+        <td><%= c.classification_name %></td>
+        <td><%= c.count %></td>
+      </tr>
+    <% }) %>
+  </table>
+<% } else { %>
+  <p>No data available.</p>
+<% } %>
+

@@ -1,0 +1,79 @@
+<h1><%= title %></h1>
+
+<div class="search-container">
+  <!-- Search Form -->
+  <form action="/search" method="POST" class="search-form">
+    <!-- Make Dropdown -->
+    <div class="form-group">
+      <label for="make">Select Make:</label>
+      <select name="make" id="make">
+        <option value="">-- Select Make --</option>
+        <% makes.forEach(m => { %>
+          <option value="<%= m %>" <%= make === m ? "selected" : "" %>><%= m %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Model Dropdown -->
+    <div class="form-group">
+      <label for="model">Select Model:</label>
+      <select name="model" id="model">
+        <option value="">-- Select Model --</option>
+        <% models.forEach(m => { %>
+          <option value="<%= m %>" <%= model === m ? "selected" : "" %>><%= m %></option>
+        <% }) %>
+      </select>
+    </div>
+
+    <!-- Year Range Inputs -->
+    <div class="form-group">
+      <label for="yearMin">Year Range:</label>
+      <input type="number" name="yearMin" id="yearMin" placeholder="From" value="<%= yearMin || '' %>" min="1900" max="<%= new Date().getFullYear() %>">
+      <input type="number" name="yearMax" id="yearMax" placeholder="To" value="<%= yearMax || '' %>" min="1900" max="<%= new Date().getFullYear() %>">
+    </div>
+
+    <!-- Price Range Inputs -->
+    <div class="form-group">
+      <label for="priceMin">Price Range ($):</label>
+      <input type="number" name="priceMin" id="priceMin" placeholder="Min" value="<%= priceMin || '' %>" min="0">
+      <input type="number" name="priceMax" id="priceMax" placeholder="Max" value="<%= priceMax || '' %>" min="0">
+    </div>
+
+    <button type="submit" class="btn">Search</button>
+  </form>
+
+  <!-- Flash / Notice Messages -->
+  <% if (messages && messages.length > 0) { %>
+    <div class="flash-message">
+      <% messages.forEach(msg => { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <!-- Search Results -->
+  <% if (results && results.length > 0) { %>
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th>Make</th>
+          <th>Model</th>
+          <th>Year</th>
+          <th>Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% results.forEach(vehicle => { %>
+          <tr>
+            <td><%= vehicle.inv_make || "N/A" %></td>
+            <td><%= vehicle.inv_model || "N/A" %></td>
+            <td><%= vehicle.inv_year || "N/A" %></td>
+            <td>$<%= vehicle.inv_price ? Number(vehicle.inv_price).toLocaleString() : "0" %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } else if (results) { %>
+    <p>No vehicles found for the selected criteria.</p>
+  <% } %>
+</div>

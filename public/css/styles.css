@@ -59,9 +59,11 @@ body {
 
 /* Navigation */
 nav {
-  background: #333;
-  margin: 0.5rem;
-  border-radius: 6px;
+  background-color: #0077cc;
+  margin: 1rem 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  overflow: hidden;
 }
 
 nav ul {
@@ -71,14 +73,84 @@ nav ul {
   align-items: center;
   margin: 0;
   padding: 0;
-  height: 3rem;
+  height: 3.5rem;
 }
 
 nav ul li {
   flex: 1;
   text-align: center;
-  color: #fff;
+  position: relative;
 }
+
+nav ul li a {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.3s, color 0.3s;
+  border-radius: 6px;
+  margin: 0.3rem;
+}
+
+nav ul li a:hover,
+nav ul li a.active {
+  background-color: #005fa3;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Dropdown support (optional) */
+nav ul li ul {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #0077cc;
+  border-radius: 0 0 10px 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  min-width: 200px;
+  z-index: 1000;
+  flex-direction: column;
+}
+
+nav ul li:hover ul {
+  display: flex;
+}
+
+nav ul li ul li {
+  text-align: left;
+}
+
+nav ul li ul li a {
+  padding: 0.5rem 1rem;
+  margin: 0;
+  border-radius: 0;
+}
+
+nav ul li ul li a:hover {
+  background-color: #005fa3;
+}
+
+/* Responsive nav */
+@media screen and (max-width: 768px) {
+  nav ul {
+    flex-direction: column;
+    height: auto;
+  }
+
+  nav ul li {
+    flex: none;
+    margin-bottom: 0.3rem;
+  }
+
+  nav ul li ul {
+    position: static;
+    box-shadow: none;
+    border-radius: 0;
+  }
+}
+
 
 /* Hero */
 .hero {
@@ -414,5 +486,190 @@ nav ul li {
   .classification-form button {
     font-size: 1.1rem;
     padding: 1rem;
+  }
+}
+
+/* Summary Boxes */
+.report-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.report-summary .summary-box {
+  flex: 1 1 200px;
+  background: #0077cc;
+  color: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.report-summary .summary-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+.report-summary .summary-box h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+}
+
+.report-summary .summary-box p {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Table Styling */
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+}
+
+.report-table th,
+.report-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ccc;
+}
+
+.report-table th {
+  background-color: #0077cc;
+  color: #fff;
+  font-weight: 600;
+}
+
+.report-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.report-table tr:hover {
+  background-color: #e6f4ff;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .report-summary {
+    flex-direction: column;
+  }
+
+  .report-summary .summary-box {
+    flex: 1 1 100%;
+  }
+
+  .report-table th,
+  .report-table td {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+  }
+}
+
+.search-container {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-end;
+}
+
+.form-group {
+  flex: 1 1 45%;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #0077cc;
+}
+
+.form-group select {
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border 0.3s;
+}
+
+.form-group select:focus {
+  border-color: #005fa3;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0,95,163,0.3);
+}
+
+.search-form .btn {
+  padding: 0.75rem 1.5rem;
+  background-color: #0077cc;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 6px;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.search-form .btn:hover {
+  background-color: #005fa3;
+  transform: translateY(-2px);
+}
+
+/* Flash messages */
+.flash-message {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: #e6f4ff;
+  border-left: 4px solid #0077cc;
+  border-radius: 6px;
+  color: #004999;
+}
+
+/* Table Styling (reuse report-table style) */
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2rem;
+}
+
+.report-table th,
+.report-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ccc;
+}
+
+.report-table th {
+  background-color: #0077cc;
+  color: #fff;
+  font-weight: 600;
+}
+
+.report-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.report-table tr:hover {
+  background-color: #e6f4ff;
+}
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .form-group {
+    flex: 1 1 100%;
+  }
+
+  .search-form {
+    gap: 1rem;
   }
 }
